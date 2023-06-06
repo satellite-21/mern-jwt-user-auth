@@ -24,7 +24,7 @@ const { count } = require('./app/models/role.model');
 const Role = db.role;
 
 db.mongoose
-    .connect(`mongodb+srv://satellite_21:3uCWwwf8K49dvq3B@satellite.cfn4pz0.mongodb.net/?retryWrites=true&w=majority`, {
+    .connect(`mongodb+srv://satellite_21:<password>@satellite.cfn4pz0.mongodb.net/?retryWrites=true&w=majority`, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     })
