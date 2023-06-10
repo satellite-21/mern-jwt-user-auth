@@ -22,7 +22,7 @@ const db = require('./app/models');
 const dbConfig = require('./app/config/db.config');
 const { count } = require('./app/models/role.model');
 const Role = db.role;
-
+// 3uCWwwf8K49dvq3B
 db.mongoose
     .connect(`mongodb+srv://satellite_21:3uCWwwf8K49dvq3B@satellite.cfn4pz0.mongodb.net/?retryWrites=true&w=majority`, {
         useNewUrlParser: true,
@@ -47,6 +47,8 @@ app.use(express.json());
 // this URL-encoded data from the request body.
 
 app.use(express.urlencoded({ extended:  true }));
+const movieRoutes = require("./app/routes/movie.routes");
+app.use("/api/movies", movieRoutes);
 
 //defining a route 
 app.get("/", (req, res) => {
@@ -63,46 +65,6 @@ app.listen(PORT, () => {
     console.log(`Server is Running on Port ${PORT}`);
 });
 
-
-
-
-// // adding three roles 
-
-// function initial() {
-//     Role.estimatedDocumentCount((err, count) => {
-//       if (!err && count === 0) {
-//         new Role({
-//           name: "user"
-//         }).save(err => {
-//           if (err) {
-//             console.log("error", err);
-//           }
-  
-//           console.log("added 'user' to roles collection");
-//         });
-  
-//         new Role({
-//           name: "moderator"
-//         }).save(err => {
-//           if (err) {
-//             console.log("error", err);
-//           }
-  
-//           console.log("added 'moderator' to roles collection");
-//         });
-  
-//         new Role({
-//           name: "admin"
-//         }).save(err => {
-//           if (err) {
-//             console.log("error", err);
-//           }
-  
-//           console.log("added 'admin' to roles collection");
-//         });
-//       }
-//     });
-//   }
 async function initial() {
     try {
       const count = await Role.estimatedDocumentCount();
