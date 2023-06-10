@@ -17,13 +17,32 @@ router.get("/", async (req, res) => {
       });
     } else {
    //this will generate random samples of movies in the fetchovies
-      movies = await Movie.aggregate([{ $sample: { size: 12 } }]);
+   const page =  parseInt(req.query.page) || 1;
+   const batchSize = 12;
+   const skipCount = (page-1)*batchSize;
+
+   movies = await Movie.aggregate([
+    { $match: { _id: { $nin: req.query.excludedMovies || [] }}},
+    { $sample: { size: batchSize}},
+    { $skip: skipCount }
+   ]);
+
+   const movieIds = movies.map(movie => movie._id);
+   const remainingMovies = await Movie.find({
+    _id: { $nin: movieIds }
+   }).limit(batchSize);
+
+   movies = movies.concat(remainingMovies);
 
     }
 
     res.json(movies);
 
-    // const movies = await Movie.find();
+    // In the backend code, we introduced pagination logic similar to before, 
+    // but now we exclude the already fetched movies using the excludedMovies query parameter.
+    //  We fetch a batch of random movies, skip the appropriate number of movies based on the page, 
+    //  and then fetch the remaining movies in a separate query. Finally, we combine the two sets of movies and return the response.
+  
   } catch (error) {
     console.log("Error fetching movies:", error);
     res.status(500).json({ message: "Internal server error" });
