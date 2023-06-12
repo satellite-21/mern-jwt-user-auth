@@ -5,49 +5,50 @@ const Movie = require("../models/movie.model");
 // Fetch all movies or results based on query parameter 
 router.get("/", async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, excludedMovies = '[]' } = req.query;
+    let excludedMovieIds;
+
+    try {
+      excludedMovieIds = JSON.parse(excludedMovies);
+      // console.log(excludedMovieIds);
+    } catch (error) {
+      console.error("Error parsing excludedMovies JSON:", error);
+      excludedMovieIds = [];
+    }
+
     let movies;
 
-    if(search) {
+    if (search) {
       movies = await Movie.find({
         $or: [
-          {Title: { $regex: search, $options: 'i'}},
-          { Description: { $regex: search, $options: 'i' } }
-        ]
+          { Title: { $regex: search, $options: "i" } },
+          { Description: { $regex: search, $options: "i" } },
+        ],
       });
     } else {
-   //this will generate random samples of movies in the fetchovies
-   const page =  parseInt(req.query.page) || 1;
-   const batchSize = 12;
-   const skipCount = (page-1)*batchSize;
+      const page = parseInt(req.query.page) || 1;
+      const batchSize = 12;
+      const skipCount = (page - 1) * batchSize;
 
-   movies = await Movie.aggregate([
-    { $match: { _id: { $nin: req.query.excludedMovies || [] }}},
-    { $sample: { size: batchSize}},
-    { $skip: skipCount }
-   ]);
+      movies = await Movie.aggregate([
+        { $match: { _id: { $nin: excludedMovieIds } } },
+        { $sample: { size: batchSize } },
+        { $skip: skipCount },
+      ]);
 
-   const movieIds = movies.map(movie => movie._id);
-   const remainingMovies = await Movie.find({
-    _id: { $nin: movieIds }
-   }).limit(batchSize);
+      const movieIds = movies.map((movie) => movie._id);
+      const remainingMovies = await Movie.find({
+        _id: { $nin: movieIds },
+      }).limit(batchSize);
 
-   movies = movies.concat(remainingMovies);
-
+      movies = movies.concat(remainingMovies);
     }
 
     res.json(movies);
-
-    // In the backend code, we introduced pagination logic similar to before, 
-    // but now we exclude the already fetched movies using the excludedMovies query parameter.
-    //  We fetch a batch of random movies, skip the appropriate number of movies based on the page, 
-    //  and then fetch the remaining movies in a separate query. Finally, we combine the two sets of movies and return the response.
-  
   } catch (error) {
     console.log("Error fetching movies:", error);
     res.status(500).json({ message: "Internal server error" });
   }
-
 });
 
 
@@ -75,6 +76,51 @@ router.post("/", async (req, res) => {
   } catch (error) {
     console.log("Error adding movie:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { field, value } = req.body;
+
+    console.log("Received PUT request for movie ID:", id);
+    console.log("Field:", field);
+    console.log("Value:", value);
+
+    // Find the movie by ID
+    const movie = await Movie.findById(id);
+
+    if (!movie) {
+      console.log("Error!! Movie not found!");
+      return res.status(404).json({ message: "Movie not found!" });
+    }
+
+    switch (field) {
+      case "Title":
+        console.log("Updating Title:", value);
+        movie.Title = value;
+        break;
+      case "URL":
+        console.log("Updating URL:", value);
+        movie.URL = value;
+        break;
+      case "Description":
+        console.log("Updating Description:", value);
+        movie.Description = value;
+        break;
+      default:
+        console.log("Invalid Field!");
+        return res.status(400).json({ message: "Invalid Field!" });
+    }
+
+    await movie.save();
+    console.log("Movie Updated Successfully");
+    res.json({ message: "Movie Updated Successfully" });
+  } catch (error) {
+    console.log("Internal server Error:", error);
+    res.status(500).json({ message: "Internal server Error" });
   }
 });
 
