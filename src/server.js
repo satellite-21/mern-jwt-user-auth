@@ -1,3 +1,5 @@
+//try adding another method for auth
+
 const  express = require('express');
 // CORS stands for Cross-Origin Resource Sharing. 
 // It is a mechanism that allows web browsers to make requests to a different domain than the one the current page originated from. 
